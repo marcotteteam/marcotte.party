@@ -9,6 +9,7 @@ kill_timeout = 5
 
 [env]
   LOCAL_DOMAIN = "marcotte.party"
+#   LOCAL_DOMAIN = "marcotte-party.fly.dev"
   WEB_CONCURRENCY = "0" # exactly 1 Puma process
   OVERMIND_FORMATION = "sidekiq=1" # exactly 1 sidekiq process
   MALLOC_ARENA_MAX = "2"
@@ -26,10 +27,10 @@ kill_timeout = 5
   # S3_ALIAS_HOST=marcotte-party.fly.dev
   ## Sending email via SMTP also requires secrets
   ## named SMTP_LOGIN and SMTP_PASSWORD
-  SMTP_SERVER = "smtp.mailgun.org"
+  SMTP_SERVER = "smtp.eu.mailgun.org"
   SMTP_PORT = "587"
-  SMTP_ENABLE_STARTTLS = "always"
-  SMTP_FROM_ADDRESS = "marcotte@marcotte.party"
+#   SMTP_ENABLE_STARTTLS = "always"
+  SMTP_FROM_ADDRESS = "marcotte@email.marcotte.party"
 
 ## Comment out this section if you use cloud storage
 [mounts]
