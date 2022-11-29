@@ -13,7 +13,7 @@ While following this guide, you may find it helpful to also view the [Mastodon d
 Fork this repo and clone a copy of it. Choose a name for your app that isn't already taken on Fly, and run the script `bin/name YOURNAME`. Follow this readme from inside your repo, after you have run the script, so that all of the steps will be updated for the name of your Fly app.
 
 ```
-$ fly apps create mastodon-example
+$ fly apps create marcotte-party
 $ fly scale memory 1024 # Rails + Sidekiq needs more than 512
 ```
 
@@ -31,8 +31,8 @@ $ docker run --rm -e OTP_SECRET=$OTP_SECRET -e SECRET_KEY_BASE=$SECRET_KEY_BASE 
 Redis is used to store the home/list feeds, along with the sidekiq queue information. The feeds can be regenerated using `tootctl`, so persistence is [not strictly necessary](https://docs.joinmastodon.org/admin/backups/#failure).
 
 ```
-$ fly apps create mastodon-example-redis
-$ bin/fly-redis volumes create --region sjc --size 1 mastodon_redis
+$ fly apps create marcotte-party-redis
+$ bin/fly-redis volumes create --region lhr --size 1 mastodon_redis
 $ bin/fly-redis deploy
 ```
 
@@ -45,25 +45,26 @@ Create that volume below, or remove the `[mounts]` section and uncomment `[env] 
 ##### Option 1: Local volume
 
 ```
-$ fly volumes create --region sjc mastodon_uploads
+$ fly volumes create --region lhr mastodon_uploads
 ```
 
 ##### Option 2: S3, etc
+
 <a id="cloud-storage"></a>
 
 ```
 $ fly secrets set AWS_ACCESS_KEY_ID=xxx AWS_SECRET_ACCESS_KEY=yyy
 ```
 
-Uncomment the section in `fly.io` to configure S3 or Wasabi.  See [mastodon.rake](https://github.com/mastodon/mastodon/blob/5ba46952af87e42a64962a34f7ec43bc710bdcaf/lib/tasks/mastodon.rake#L137) for the env vars needed for Minio or Google Cloud Storage.
+Uncomment the section in `fly.io` to configure S3 or Wasabi. See [mastodon.rake](https://github.com/mastodon/mastodon/blob/5ba46952af87e42a64962a34f7ec43bc710bdcaf/lib/tasks/mastodon.rake#L137) for the env vars needed for Minio or Google Cloud Storage.
 
 To serve cloud-stored images directly from your domain, set `S3_ALIAS_HOST` in `fly.toml` and then uncomment the section at the top of `Caddyfile`.
 
 #### Postgres database
 
 ```
-$ fly pg create --region sjc --name mastodon-example-db
-$ fly pg attach mastodon-example-db
+$ fly pg create --region lhr --name marcotte-party-db
+$ fly pg attach marcotte-party-db
 $ fly deploy -c fly.setup.toml # run `rails db:schema:load`, may take 2-3 minutes
 ```
 
@@ -81,26 +82,26 @@ $ fly secrets set SMTP_LOGIN=<public token> SMTP_PASSWORD=<secret token>
 2. Run `fly ips list`, and if the list is empty, run `fly ips allocate-v4`.
 3. Then, create DNS records for your custom domain.
 
-    If your DNS host supports ALIAS records:
+   If your DNS host supports ALIAS records:
 
-    ```
-    @   ALIAS mastodon-example.fly.dev
-    www CNAME mastodon-example.fly.dev
-    ```
+   ```
+   @   ALIAS marcotte-party.fly.dev
+   www CNAME marcotte-party.fly.dev
+   ```
 
-    If your DNS host only allows A records, use the IP. For example, if your IP was `3.3.3.3`:
+   If your DNS host only allows A records, use the IP. For example, if your IP was `3.3.3.3`:
 
-    ```
-    @   A     3.3.3.3
-    www CNAME @
-    ```
+   ```
+   @   A     3.3.3.3
+   www CNAME @
+   ```
 
 4. Finally, generate SSL certificates from Let's Encrypt:
 
-    ```
-    $ fly certs add MYDOMAIN.COM
-    $ fly certs add WWW.MYDOMAIN.COM
-    ```
+   ```
+   $ fly certs add MYDOMAIN.COM
+   $ fly certs add WWW.MYDOMAIN.COM
+   ```
 
 ### Deploy
 
@@ -120,12 +121,11 @@ $ fly ssh console -C 'tootctl accounts modify <username> --confirm --role Owner'
 
 Enjoy your server.
 
-
 ### Operating your instance
 
 If you still haven't gotten enough, here are some notes on how to operate your instance after it's running.
 
-Useful resources for operating and debugging a running instance include `fly logs`, `fly scale show`, `fly ssh console`, the Metrics section of `fly dashboard`, and the Sidekiq dashboard at https://mastodon-example.fly.dev/sidekiq (you have to be logged in to Mastodon as an admin user to see it).
+Useful resources for operating and debugging a running instance include `fly logs`, `fly scale show`, `fly ssh console`, the Metrics section of `fly dashboard`, and the Sidekiq dashboard at https://marcotte-party.fly.dev/sidekiq (you have to be logged in to Mastodon as an admin user to see it).
 
 If your instance is getting slow or falling over, you may find [Scaling Mastodon in the Face of an Exodus](https://nora.codes/post/scaling-mastodon-in-the-face-of-an-exodus/) helpful.
 
@@ -138,7 +138,7 @@ If there are migrations that need to be run, make sure that the release command 
 If there are migrations that must be run before deploying to avoid downtime, you can run the pre-deploy migrations using a second app. By scaling this app to a VM count of zero, it won't add to our bill, but it will let us run the pre-deploy migrations as a release command before the web processes get the new code.
 
 ```
-$ fly apps create mastodon-example-predeploy
+$ fly apps create marcotte-party-predeploy
 $ bin/fly-predeploy secrets set OTP_SECRET=placeholder SECRET_KEY_BASE=placeholder
 $ bin/fly-predeploy secrets set $(fly ssh console -C env | grep DATABASE_URL)
 $ bin/fly-predeploy scale memory 1024
@@ -157,6 +157,7 @@ $ fly deploy
 If your instance attracts many users (or maybe a few users who follow a huge number of other accounts), you may notice things start to slow down, and you may run out of database, redis, or storage space.
 
 ##### A bigger VM
+
 <a id="bigger-vm"></a>
 
 If you need more web processes, or more sidekiq workers, the easiest option is to choose a larger Fly VM size via `fly scale vm`. With a larger VM, you can run more Puma processes by setting `WEB_CONCURRENCY`, and you can run more sidekiq processes by setting `OVERMIND_FORMATION`. Try to aim for about as many Puma+Sidekiq processes as you have cores, and review the CPU usage of your VM to know whether to adjust up or down.
@@ -178,13 +179,13 @@ Ready? Okay, let's do it:
 
 1. Convert your application to multiple-VM mode by uncommenting the `[processes]` section in `fly.toml`.
 1. Scale memory so everything can run successfully.
-    ```
-    $ fly scale memory 512 --group sidekiq  # a single sidekiq with 5 threads uses about 400MB
-    $ fly scale memory 512 --group schedule # a single sidekiq with 5 threads uses about 400MB
-    $ fly scale memory 512 --group rails    # rails with 5 threads plus node uses about 430MB
-    $ fly scale count schedule=1 rails=2 sidekiq=2 # or your desired number of VMs
-    $ fly deploy
-    ```
+   ```
+   $ fly scale memory 512 --group sidekiq  # a single sidekiq with 5 threads uses about 400MB
+   $ fly scale memory 512 --group schedule # a single sidekiq with 5 threads uses about 400MB
+   $ fly scale memory 512 --group rails    # rails with 5 threads plus node uses about 430MB
+   $ fly scale count schedule=1 rails=2 sidekiq=2 # or your desired number of VMs
+   $ fly deploy
+   ```
 
 Increase the number of `rails` or `sidekiq` processes by running `fly scale count rails=N` or `fly scale count sidekiq=N` as needed. Don't forget to also adjust the number of Puma and Sidekiq threads, as described in [A bigger VM](#bigger-vm) above, to match your CPU and memory settings!
 

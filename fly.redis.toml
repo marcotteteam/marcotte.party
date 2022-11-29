@@ -1,4 +1,4 @@
-app = "mastodon-example-redis"
+app = "marcotte-party-redis"
 
 [build]
   dockerfile = "Dockerfile.redis"
