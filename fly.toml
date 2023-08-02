@@ -3,6 +3,8 @@ app = "marcotte-party"
 kill_signal = "SIGINT"
 kill_timeout = 5
 
+primary_region = "lhr"
+
 ## Uncomment if you are upgrading Mastodon. See README.md for details.
 # [deploy]
 #   release_command = "bin/rails db:migrate"
