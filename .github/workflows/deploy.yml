@@ -1,0 +1,16 @@
+name: "Deploy"
+concurrency: deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, primary]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run
+        run: nomad run job.nomad
