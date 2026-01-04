@@ -7,8 +7,8 @@
 # 	path /media_attachments/*
 # }
 # reverse_proxy @assets https://s3.us-west-1.amazonaws.com {
-#   header_up Host "marcotte-party-bucket"
+#   header_up Host "social-python-it-bucket"
 # }
 
 reverse_proxy :3000
-reverse_proxy /api/v1/streaming :4000
+reverse_proxy /api/v1/streaming/* :4000
